@@ -7,7 +7,7 @@ import {isAxiosError} from 'axios';
 import {Image, ImageBackground} from 'expo-image';
 import {launchImageLibraryAsync} from 'expo-image-picker';
 import {LinearGradient} from 'expo-linear-gradient';
-import {router, useLocalSearchParams} from 'expo-router';
+import {router} from 'expo-router';
 import React, {useState} from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -15,7 +15,6 @@ import Toast from 'react-native-toast-message';
 import AppButton from '../components/ui/button';
 
 const Upload = () => {
-	const {date, time, letter} = useLocalSearchParams();
 	const insets = useSafeAreaInsets();
 	const queryClient = useQueryClient();
 	const [photos, setPhotos] = useState<string[]>([]);
@@ -70,9 +69,9 @@ const Upload = () => {
 				name: filename,
 				type: fileType,
 			} as any);
-			formDataToSend.append('future_date', date as string);
-			formDataToSend.append('future_time', time as string);
-			formDataToSend.append('message_to_future_self', letter as string);
+			// formDataToSend.append('future_date', date as string);
+			// formDataToSend.append('future_time', time as string);
+			// formDataToSend.append('message_to_future_self', letter as string);
 
 			const response = await postFutureSelf(formDataToSend);
 			if (response.data) {

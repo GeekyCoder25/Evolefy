@@ -1,14 +1,10 @@
 import BrandIcon from '@/assets/icons/brand';
-import Onboarding1Step1 from '@/assets/icons/Onboarding1Step1';
-import Onboarding1Step2 from '@/assets/icons/Onboarding1Step2';
-import Onboarding1Step3 from '@/assets/icons/Onboarding1Step3';
 import Onboarding2Icon1 from '@/assets/icons/Onboarding2Icon1';
 import Onboarding2Icon2 from '@/assets/icons/Onboarding2Icon2';
 import Onboarding2Icon3 from '@/assets/icons/Onboarding2Icon3';
 import Onboarding2Icon4 from '@/assets/icons/Onboarding2Icon4';
 import Onboarding2Step1 from '@/assets/icons/Onboarding2Step1';
-import Onboarding3Step1 from '@/assets/icons/Onboarding3Step1';
-import {ImageBackground} from 'expo-image';
+import {Image, ImageBackground} from 'expo-image';
 import {LinearGradient} from 'expo-linear-gradient';
 import {router} from 'expo-router';
 import React, {useEffect, useRef, useState} from 'react';
@@ -120,9 +116,17 @@ const OnboardingCarousel = () => {
 			secondaryColor: '#00A8CC',
 			bg: require('../assets/images/onboarding_bg1.jpg'),
 			images: [
-				{key: <Onboarding1Step1 />},
-				{key: <Onboarding1Step2 />},
-				{key: <Onboarding1Step3 />},
+				{
+					key: (
+						<Image
+							source={require('../assets/images/onboarding1.png')}
+							style={{width: 500, height: 500}}
+							contentFit="scale-down"
+						/>
+					),
+				},
+				// {key: <Onboarding1Step2 />},
+				// {key: <Onboarding1Step3 />},
 			],
 		},
 		{
@@ -146,7 +150,17 @@ const OnboardingCarousel = () => {
 			primaryColor: '#10B981',
 			secondaryColor: '#059669',
 			bg: require('../assets/images/onboarding_bg3.jpg'),
-			images: [{key: <Onboarding3Step1 />}],
+			images: [
+				{
+					key: (
+						<Image
+							source={require('../assets/images/onboarding3.png')}
+							style={{width: 500, height: 500}}
+							contentFit="contain"
+						/>
+					),
+				},
+			],
 		},
 	];
 
@@ -316,7 +330,7 @@ const OnboardingCarousel = () => {
 					<View style={styles.textContainer}>
 						<Text
 							style={styles.title}
-							className="font-sora-bold text-5xl leading-normal"
+							className="font-sora-bold text-4xl leading-normal"
 						>
 							{item.title}
 						</Text>

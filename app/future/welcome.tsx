@@ -54,7 +54,7 @@ const Welcome = () => {
 						contentFit="contain"
 					/>
 				</ImageBackground>
-				<AppButton onPress={() => router.push('/future/date-time')} />
+				<AppButton onPress={() => router.push('/future/upload')} />
 			</View>
 
 			{/* Bottom Section with Dots and Buttons */}

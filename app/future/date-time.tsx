@@ -5,7 +5,7 @@ import React, {useState} from 'react';
 import {Modal, Platform, Text, TouchableOpacity, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import MainContainer from '../components/MainContainer';
-import ProgressIndicator from '../components/progress-indicator';
+import ProgressIndicator from '../components/ProgressIndicator';
 import Back from '../components/ui/back';
 import AppButton from '../components/ui/button';
 
@@ -63,7 +63,7 @@ const DateTime = () => {
 			<View className="flex flex-row justify-between items-center mb-12">
 				<Back />
 				<TouchableOpacity onPress={() => router.push('/welcome/page1')}>
-					<Text className="text-white font-sora-semibold text-base">Skip</Text>
+					{/* <Text className="text-white font-sora-semibold text-base">Skip</Text> */}
 				</TouchableOpacity>
 			</View>
 

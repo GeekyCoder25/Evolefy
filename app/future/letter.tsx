@@ -1,4 +1,7 @@
 import {SCREEN_HEIGHT} from '@/constants';
+import {postFutureLetter} from '@/services/apis/user';
+import {useQueryClient} from '@tanstack/react-query';
+import {isAxiosError} from 'axios';
 import {router, useLocalSearchParams} from 'expo-router';
 import React, {useState} from 'react';
 import {
@@ -10,8 +13,9 @@ import {
 	View,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import MainContainer from '../components/MainContainer';
-import ProgressIndicator from '../components/progress-indicator';
+import ProgressIndicator from '../components/ProgressIndicator';
 import Back from '../components/ui/back';
 import AppButton from '../components/ui/button';
 import TextInput from '../components/ui/TextInput';
@@ -19,12 +23,44 @@ import TextInput from '../components/ui/TextInput';
 const Letter = () => {
 	const {date, time} = useLocalSearchParams();
 	const insets = useSafeAreaInsets();
+	const queryClient = useQueryClient();
 	const [letter, setLetter] = useState('');
-	const handleNext = () => {
+	const [isUploading, setIsUploading] = useState(false);
+
+	const handleNext = async () => {
 		// You can pass the selected date and time to the next screen
-		router.push(
-			`/future/upload?date=${date}&time=${time}&letter=${encodeURIComponent(letter)}`
-		);
+		// router.push(
+		// 	`/future/upload?date=${date}&time=${time}&letter=${encodeURIComponent(letter)}`
+		// );
+		try {
+			setIsUploading(true);
+			const formDataToSend = new FormData();
+			formDataToSend.append('scheduled_date', date as string);
+			formDataToSend.append('scheduled_time', time as string);
+			formDataToSend.append('title', 'Letter');
+			formDataToSend.append('content', letter as string);
+			const response = await postFutureLetter(formDataToSend);
+			if (response.data) {
+				Toast.show({
+					type: 'success',
+					text1: 'Success',
+					text2: 'Letter submitted successfully',
+				});
+				await queryClient.invalidateQueries({queryKey: ['future_letter']});
+				router.dismissTo('/(tabs)');
+			}
+		} catch (error) {
+			console.error('Upload failed:', error);
+			Toast.show({
+				type: 'error',
+				text1: 'Upload Failed',
+				text2: isAxiosError(error)
+					? error.response?.data?.message || error.message
+					: 'Submission failed. Please try again.',
+			});
+		} finally {
+			setIsUploading(false);
+		}
 	};
 
 	return (
@@ -41,7 +77,7 @@ const Letter = () => {
 					<Back />
 					<TouchableOpacity onPress={() => router.push('/welcome/page1')}>
 						<Text className="text-white font-sora-semibold text-base">
-							Skip
+							{/* Skip */}
 						</Text>
 					</TouchableOpacity>
 				</View>
@@ -79,7 +115,8 @@ const Letter = () => {
 			<AppButton
 				onPress={handleNext}
 				// style={{marginBottom: insets.bottom + 50, marginTop: 20}}
-				disabled={letter.length < 50}
+				disabled={letter.length < 50 || isUploading}
+				loading={isUploading}
 			/>
 			<View style={{paddingBottom: insets.bottom + 30, marginTop: 20}} />
 		</MainContainer>

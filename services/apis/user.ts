@@ -70,6 +70,24 @@ interface FutureMe {
 		updated_at: string; // ISO datetime string
 	};
 }
+interface DailyChallenge {
+	id: number;
+	type: 'daily_challenge';
+	attributes: {
+		category: string;
+		challenge: string;
+		challenge_date: string;
+		completed_at: string | null;
+		difficulty: string;
+		evo_points_awarded: number;
+		status: string;
+	};
+	relationships: any[]; // Empty array in current response
+	meta: {
+		created_at: string; // ISO datetime string
+		updated_at: string; // ISO datetime string
+	};
+}
 
 // Future Me creation response data interface
 interface FutureMeResponseData {
@@ -106,6 +124,18 @@ export const switchMode = async () => {
 	return response.data;
 };
 
+export const postFutureLetter = async (formData: any) => {
+	const response = await axiosClient.post<
+		ArrayBuffer,
+		ApiResponse<FutureMeResponseData>
+	>('/future-letters', formData, {
+		headers: {
+			'Content-Type': 'multipart/form-data',
+		},
+	});
+	return response.data;
+};
+
 export const postFutureSelf = async (formData: any) => {
 	const response = await axiosClient.post<
 		ArrayBuffer,
@@ -119,6 +149,19 @@ export const postFutureSelf = async (formData: any) => {
 };
 export const getFutureSelf = async () => {
 	const response = await axiosClient.get<ApiResponse<FutureMe[]>>('/future-me');
+	return response.data;
+};
+export const getDailyChallenge = async () => {
+	const response = await axiosClient.get<ApiResponse<DailyChallenge>>(
+		'/daily-challenge/today'
+	);
+	return response.data;
+};
+export const completeChallenge = async (id: number) => {
+	const response = await axiosClient.post<
+		undefined,
+		ApiResponse<DailyChallenge>
+	>(`/daily-challenge/${id}/complete`);
 	return response.data;
 };
 

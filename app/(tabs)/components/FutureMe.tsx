@@ -1,4 +1,5 @@
 import CrownIcon from '@/assets/icons/crown';
+import LetterIcon from '@/assets/icons/letter';
 import {SCREEN_HEIGHT} from '@/constants';
 import {getFutureSelf} from '@/services/apis/user';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -26,6 +27,12 @@ const FutureMe = () => {
 			style={{bottom: insets.bottom + SCREEN_HEIGHT * 0.2}}
 		>
 			<TouchableOpacity
+				onPress={() => router.push('/future/date-time')}
+				className="bg-white w-20 h-20 rounded-full flex justify-center items-center"
+			>
+				<LetterIcon />
+			</TouchableOpacity>
+			<TouchableOpacity
 				onPress={() => router.push('/subscription/subscription')}
 				className="bg-white w-20 h-20 rounded-full flex justify-center items-center"
 			>
@@ -36,7 +43,7 @@ const FutureMe = () => {
 					onPress={() =>
 						router.push(futureMe ? `/future/dashboard` : '/future/welcome')
 					}
-					className="items-center gap-y-2"
+					className="items-center gap-y-2 w-20 h-20"
 				>
 					<Image
 						source={
@@ -44,9 +51,15 @@ const FutureMe = () => {
 								? {uri: futurePic}
 								: require('../../../assets/images/futureme-welcome-bg.png')
 						}
-						style={{width: 80, height: 80, borderRadius: 80}}
+						style={{
+							width: 80,
+							height: 80,
+							borderRadius: 80,
+							borderColor: '#FFFFFF',
+							borderWidth: 1,
+						}}
 					/>
-					<View className="bg-[#5F1D9C] px-4 py-1 rounded-full flex-row items-center gap-x-1">
+					<View className="bg-[#5F1D9C] px-2 py-1 rounded-full flex-row items-center gap-x-1">
 						<Text className="text-white font-sora-semibold text-xs">
 							Future me
 						</Text>

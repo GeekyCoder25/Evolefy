@@ -177,6 +177,7 @@ const SignupScreen = () => {
 							</Text>
 						</View>
 					</View>
+					<View className="h-[30vh]" />
 				</ScrollView>
 			</KeyboardAvoidingView>
 

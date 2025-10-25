@@ -1,5 +1,6 @@
 import RadioIcon from '@/assets/icons/radio';
 import RadioActiveIcon from '@/assets/icons/radio-active';
+import SendIcon from '@/assets/icons/send';
 import {SCREEN_HEIGHT, SCREEN_WIDTH} from '@/constants';
 import {
 	AITaskSuggestion,
@@ -13,10 +14,14 @@ import {isAxiosError} from 'axios';
 import {Image} from 'expo-image';
 import {LinearGradient} from 'expo-linear-gradient';
 import {router} from 'expo-router';
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
+	Keyboard,
+	KeyboardAvoidingView,
 	Modal,
 	Platform,
+	Pressable,
+	TextInput as RNTextInput,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -69,11 +74,28 @@ const Create = () => {
 
 	// AI Suggestions state
 	const [showAISuggestions, setShowAISuggestions] = useState(false);
+	const [showModal, setShowModal] = useState(false);
 	const [aiSuggestions, setAiSuggestions] = useState<AITaskSuggestion[]>([]);
 	const [creatingTaskFromSuggestion, setCreatingTaskFromSuggestion] = useState<
 		string | null
 	>(null);
 	const [usedAITasks, setUsedAITasks] = useState<string[]>([]);
+	const [inputText, setInputText] = useState('');
+
+	const inputRef = useRef<RNTextInput | null>(null);
+	const scrollViewRef = useRef<ScrollView>(null);
+
+	useEffect(() => {
+		const keyboardDidHideListener = Keyboard.addListener(
+			'keyboardDidHide',
+			() => {
+				inputRef.current?.blur();
+			}
+		);
+		return () => {
+			keyboardDidHideListener?.remove();
+		};
+	}, []);
 
 	const handlePrioritySelect = (priority: string) => {
 		setSelectedPriority(priority);
@@ -158,7 +180,7 @@ const Create = () => {
 
 	const closeSuggestions = () => {
 		setShowAISuggestions(false);
-		router.back();
+		usedAITasks.length && router.back();
 	};
 
 	const onDateChange = (event: any, date?: Date) => {
@@ -179,11 +201,113 @@ const Create = () => {
 		}
 	};
 
+	const sendMessage = () => {
+		createEvoMutation({context: inputText});
+		setShowModal(false);
+		setInputText('');
+		if (scrollViewRef.current) {
+			setTimeout(() => {
+				scrollViewRef.current?.scrollToEnd({animated: true});
+			}, 100);
+		}
+	};
+
 	const selectedPriorityData = priorityOptions.find(
 		p => p.id === selectedPriority
 	);
 	const selectedIntervalData = intervalOptions.find(
 		i => i.id === selectedInterval
+	);
+
+	const aiContextModal = () => (
+		<Modal
+			visible={showModal}
+			transparent={true}
+			animationType="slide"
+			onRequestClose={() => setShowModal(false)}
+			statusBarTranslucent
+		>
+			<Pressable
+				onPress={() => {
+					setShowModal(false);
+					Keyboard.dismiss();
+				}}
+				className="flex-1 bg-black/80 h-screen w-screen z-10 absolute"
+			/>
+			<View
+				className="flex-1 rounded-t-3xl overflow-hidden z-20"
+				style={{paddingTop: 20, marginTop: SCREEN_HEIGHT * 0.4}}
+			>
+				<KeyboardAvoidingView
+					className="flex-1 rounded-t-3xl overflow-hidden z-20"
+					style={{paddingTop: 20, marginTop: SCREEN_HEIGHT * 0.4}}
+					behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+					keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+				>
+					<Image
+						source={require('../../assets/images/onboarding_bg.jpg')}
+						style={styles.bgImage}
+					/>
+					<View
+						className="bg-[rgba(12, 49, 168, 0.5)] flex-1 rounded-t-3xl overflow-hidden"
+						style={{backgroundColor: 'rgba(12, 49, 168, 0.1)'}}
+					>
+						<View className="flex-row justify-center items-center ">
+							<View className="px-16 my-5 border-b-8 border-gray-700 rounded-full"></View>
+						</View>
+						<ScrollView
+							ref={scrollViewRef}
+							showsVerticalScrollIndicator={false}
+							className="flex-1 pt-6"
+							contentContainerStyle={{paddingBottom: 20}}
+						>
+							<View className="flex-row items-start mb-4 px-4">
+								<View className="rounded-full p-2 mr-1">
+									<Image
+										source={require('../../assets/images/evoIcon.png')}
+										style={{width: 30, height: 30}}
+									/>
+								</View>
+								<View className="flex-1 flex-row py-2">
+									<View
+										className="rounded-2xl rounded-tl-md px-4 py-3 max-w-[80%]"
+										style={{backgroundColor: 'rgba(0, 66, 86, 0.32)'}}
+									>
+										<Text className="text-white font-inter-semibold text-base leading-5">
+											Hello, please describe the task I should set
+										</Text>
+									</View>
+								</View>
+							</View>
+						</ScrollView>
+						<View
+							className="px-4 pb-0 flex-row items-center"
+							style={{paddingBottom: insets.bottom + 30}}
+						>
+							<RNTextInput
+								value={inputText}
+								onChangeText={setInputText}
+								placeholder="What kind of task do you want to create?"
+								placeholderTextColor="#9CA3AF"
+								className="flex-1 text-white font-inter-regular text-base bg-[#192024] rounded-2xl px-4 py-5 border border-white"
+								multiline
+								maxLength={500}
+								onSubmitEditing={sendMessage}
+								returnKeyType="send"
+								ref={inputRef}
+							/>
+							<TouchableOpacity
+								onPress={sendMessage}
+								className="ml-3"
+								disabled={inputText.trim() === ''}
+							>
+								<SendIcon />
+							</TouchableOpacity>
+						</View>
+					</View>
+				</KeyboardAvoidingView>
+			</View>
+		</Modal>
 	);
 
 	// AI Suggestions Modal
@@ -524,6 +648,7 @@ const Create = () => {
 
 			{/* AI Suggestions Modal */}
 			{renderAISuggestions()}
+			{aiContextModal()}
 
 			{/* Bottom Section */}
 			<View
@@ -532,9 +657,7 @@ const Create = () => {
 			>
 				{/* Use Evo Assistant Button */}
 				<TouchableOpacity
-					onPress={() =>
-						createEvoMutation({context: taskName || 'Create task for today'})
-					}
+					onPress={() => setShowModal(true)}
 					className="absolute right-[5%] gap-3"
 					style={{
 						shadowColor: '#3B82F6',

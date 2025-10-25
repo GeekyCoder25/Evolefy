@@ -2,17 +2,27 @@ import ProfilePicture from '@/app/components/ProfilePicture';
 import Back from '@/app/components/ui/back';
 import EVIcon from '@/assets/icons/ev';
 import FireIcon from '@/assets/icons/fire';
+import {STREAK_COUNT} from '@/constants';
 import {useGlobalStore} from '@/context/store';
 import {getTodayGoal} from '@/services/apis/goal';
 import {fetchLeaderboard} from '@/services/apis/leaderboard';
 import {getRoadMapStats} from '@/services/apis/roadmap';
+import {Ionicons} from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useQuery} from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import {ImageBackground} from 'expo-image';
 import {LinearGradient} from 'expo-linear-gradient';
 import {router} from 'expo-router';
-import React from 'react';
-import {ScrollView, Text, TouchableOpacity, View} from 'react-native';
+import React, {useEffect} from 'react';
+import {
+	Pressable,
+	ScrollView,
+	Text,
+	TouchableOpacity,
+	View,
+} from 'react-native';
+
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 interface HeaderProps {
@@ -35,7 +45,7 @@ const Header = ({
 }: HeaderProps) => {
 	const insets = useSafeAreaInsets();
 
-	const {user} = useGlobalStore();
+	const {user, setShowStreakModal} = useGlobalStore();
 
 	const {data} = useQuery({
 		queryKey: ['leaderboard'],
@@ -86,8 +96,16 @@ const Header = ({
 		data?.data?.sort((a, b) => b.attributes.ev_score - a.attributes.ev_score) ||
 		[];
 
-	const leaderboardPosition =
-		sortedUsers.findIndex(u => u.attributes.fullname === user?.fullname) + 1;
+	const leaderboardPosition = sortedUsers.findIndex(u => u.id === user?.id) + 1;
+
+	useEffect(() => {
+		if (!user) return;
+		AsyncStorage.getItem(STREAK_COUNT).then(value => {
+			if (value !== user?.streak_count.toString()) {
+				setShowStreakModal(true);
+			}
+		});
+	}, [setShowStreakModal, user]);
 
 	return (
 		<ImageBackground source={require('../../../assets/images/noise-bg.png')}>
@@ -95,8 +113,8 @@ const Header = ({
 				className="px-[5%] pb-5 gap-5"
 				style={{paddingTop: insets.top + 10}}
 			>
-				<View className="flex-row justify-between items-center gap-2">
-					<View className="flex-row items-center gap-x-2 flex-1">
+				<View className="flex-row flex-wrap justify-between items-center gap-2">
+					<View className="flex-row items-center gap-x-2 mr-auto">
 						{showBack && <Back size={30} onPress={onBackPress} />}
 						{showProfile && (
 							<View className="flex-row items-center gap-2">
@@ -113,7 +131,7 @@ const Header = ({
 						)}
 					</View>
 					{!hideRightElements && (
-						<View className="flex-row gap-x-3">
+						<View className="flex-row gap-x-3 ml-auto">
 							<View className="bg-secondary px-4 py-2 rounded-full flex-row items-center gap-2">
 								<Text className="text-white font-inter-bold text-xs">
 									{user?.ev_score} EV
@@ -127,6 +145,15 @@ const Header = ({
 								</Text>
 								<FireIcon />
 							</View>
+							{showProfile && (
+								<Pressable onPress={() => router.push('/notifications')}>
+									<Ionicons
+										name="notifications-outline"
+										size={24}
+										color="white"
+									/>
+								</Pressable>
+							)}
 						</View>
 					)}
 				</View>

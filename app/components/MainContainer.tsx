@@ -1,12 +1,6 @@
 import {Image} from 'expo-image';
 import React, {PropsWithChildren} from 'react';
-import {
-	Dimensions,
-	Keyboard,
-	StyleSheet,
-	TouchableWithoutFeedback,
-	View,
-} from 'react-native';
+import {Dimensions, StyleSheet, View} from 'react-native';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
@@ -15,15 +9,15 @@ const MainContainer = ({
 	className,
 }: PropsWithChildren & {className?: string}) => {
 	return (
-		<TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-			<View className="flex-1 bg-background">
-				<Image
-					source={require('../../assets/images/onboarding_bg.jpg')}
-					style={styles.bgImage}
-				/>
-				<View className={`flex-1 ${className}`}>{children}</View>
-			</View>
-		</TouchableWithoutFeedback>
+		// <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+		<View className="flex-1 bg-background">
+			<Image
+				source={require('../../assets/images/onboarding_bg.jpg')}
+				style={styles.bgImage}
+			/>
+			<View className={`flex-1 ${className}`}>{children}</View>
+		</View>
+		// </TouchableWithoutFeedback>
 	);
 };
 

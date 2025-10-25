@@ -10,3 +10,4 @@ export const LAST_LOGIN = 'lastLogin';
 export const HAS_ONBOARDED = 'hasOnboarded';
 export const LAST_OTP = 'lastOtp';
 export const HAS_OPENED_EVO = 'hasOpenedEvo';
+export const STREAK_COUNT = 'streakCount';

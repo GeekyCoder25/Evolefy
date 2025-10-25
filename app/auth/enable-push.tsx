@@ -87,7 +87,7 @@ const EnablePushScreen = () => {
 					contentPosition={'top center'}
 				>
 					<Image
-						source={require('../../assets/images/futureme-welcome-bg.png')}
+						source={require('../../assets/images/notification.png')}
 						style={{
 							width: '100%',
 							height: '100%',

@@ -15,6 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Updates from 'expo-updates';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
+import DailyChallenge from './components/DailyChallenge';
+import Streak from './components/StreakModal';
 
 export default function RootLayout() {
 	const [loaded] = useFonts({
@@ -84,6 +86,8 @@ export default function RootLayout() {
 					</Stack>
 					<StatusBar style="light" />
 					<Toast topOffset={insets.top + 10} />
+					<Streak />
+					<DailyChallenge />
 				</PushNotification>
 			</ThemeProvider>
 		</PersistQueryClientProvider>

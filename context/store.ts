@@ -6,5 +6,9 @@ export const useGlobalStore = create<GlobalState>(set => ({
 	onboardingResponses: [],
 	setUser: user => set({user}),
 	setOnboardingResponses: onboardingResponses => set({onboardingResponses}),
+	showStreakModal: false,
+	setShowStreakModal: showStreakModal => set({showStreakModal}),
+	showChallengeModal: false,
+	setShowChallengeModal: showChallengeModal => set({showChallengeModal}),
 	reset: () => set({user: null, onboardingResponses: []}),
 }));

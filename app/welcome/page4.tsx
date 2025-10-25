@@ -7,7 +7,7 @@ import React, {useState} from 'react';
 import {Text, TouchableOpacity, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import MainContainer from '../components/MainContainer';
-import ProgressIndicator from '../components/progress-indicator';
+import ProgressIndicator from '../components/ProgressIndicator';
 import Back from '../components/ui/back';
 import AppButton from '../components/ui/button';
 

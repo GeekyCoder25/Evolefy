@@ -45,9 +45,9 @@ const Dashboard = () => {
 					</TouchableOpacity>
 				</View>
 				<ScrollView
-					className="flex-1 px-[5%] py-20"
+					className="flex-1 px-[5%] pt-20"
 					showsVerticalScrollIndicator={false}
-					contentContainerStyle={{paddingBottom: insets.bottom + 50}}
+					contentContainerStyle={{paddingBottom: insets.bottom + 150}}
 				>
 					<View className="flex-row mb-20">
 						<View className="bg-secondary py-7 px-6 rounded-xl w-1/2">

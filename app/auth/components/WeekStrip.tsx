@@ -5,11 +5,16 @@ import React, {useState} from 'react';
 import {Text, TouchableOpacity, View} from 'react-native';
 
 interface WeekStripProps {
-	selectedDate: Date;
-	setSelectedDate: React.Dispatch<React.SetStateAction<Date>>;
+	selectedDate?: Date;
+	setSelectedDate?: React.Dispatch<React.SetStateAction<Date>>;
+	isStreak?: boolean;
 }
 
-const WeekStrip = ({selectedDate, setSelectedDate}: WeekStripProps) => {
+const WeekStrip = ({
+	selectedDate,
+	setSelectedDate,
+	isStreak,
+}: WeekStripProps) => {
 	const [currentDate, setCurrentDate] = useState(dayjs());
 
 	// Generate 7-day window with current day at center
@@ -59,34 +64,41 @@ const WeekStrip = ({selectedDate, setSelectedDate}: WeekStripProps) => {
 					</TouchableOpacity>
 				</View>
 			</LinearGradient>
-			<View className="flex-row items-center justify-between mt-5 bg-[#2E0E4B] px-2 py-4 rounded-lg">
-				{/* Days */}
-				<View className="flex-row flex-1 justify-around">
-					{daysToShow.map((day, index) => {
-						const isToday = day.isSame(dayjs(), 'day');
-						return (
-							<View key={index} className="items-center">
-								<Text className="text-blue-200 font-inter-medium text-xs mb-2">
-									{day.format('ddd')} {/* Mon, Tue... */}
-								</Text>
-								<TouchableOpacity
-									className={`w-8 h-8 rounded-full items-center justify-center ${
-										isToday ? 'bg-white' : ''
-									}`}
-								>
-									<Text
-										className={`font-inter-semibold ${
-											isToday ? 'text-blue-600' : 'text-white'
+			<LinearGradient
+				colors={isStreak ? ['#00CCFF', '#1520A6'] : ['#2E0E4B', '#2E0E4B']}
+				start={{x: 0, y: 0}}
+				end={{x: 1, y: 0.4}}
+				style={{borderRadius: 8, marginTop: 20}}
+			>
+				<View className="flex-row items-center justify-between px-2 py-4 rounded-lg">
+					{/* Days */}
+					<View className="flex-row flex-1 justify-around">
+						{daysToShow.map((day, index) => {
+							const isToday = day.isSame(dayjs(), 'day');
+							return (
+								<View key={index} className="items-center">
+									<Text className="text-blue-200 font-inter-medium text-xs mb-2">
+										{day.format('ddd')} {/* Mon, Tue... */}
+									</Text>
+									<TouchableOpacity
+										className={`w-8 h-8 rounded-full items-center justify-center ${
+											isToday ? 'bg-white' : ''
 										}`}
 									>
-										{day.format('D')}
-									</Text>
-								</TouchableOpacity>
-							</View>
-						);
-					})}
+										<Text
+											className={`font-inter-semibold ${
+												isToday ? 'text-blue-600' : 'text-white'
+											}`}
+										>
+											{day.format('D')}
+										</Text>
+									</TouchableOpacity>
+								</View>
+							);
+						})}
+					</View>
 				</View>
-			</View>
+			</LinearGradient>
 		</View>
 	);
 };

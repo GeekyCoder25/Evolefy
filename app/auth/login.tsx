@@ -9,8 +9,17 @@ import {useMutation, useQuery} from '@tanstack/react-query';
 import {isAxiosError} from 'axios';
 import * as Notifications from 'expo-notifications';
 import {router} from 'expo-router';
-import React, {useState} from 'react';
-import {ScrollView, Text, TouchableOpacity, View} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+	Keyboard,
+	KeyboardAvoidingView,
+	Platform,
+	TextInput as RNTextInput,
+	ScrollView,
+	Text,
+	TouchableOpacity,
+	View,
+} from 'react-native';
 import MainContainer from '../components/MainContainer';
 import TextInput from '../components/ui/TextInput';
 import AuthFooter from './components/AuthFooter';
@@ -18,6 +27,7 @@ import AuthHeader from './components/AuthHeader';
 
 const LoginScreen = () => {
 	const {user, setUser} = useGlobalStore();
+	const [isInputFocused, setIsInputFocused] = useState(false);
 
 	const [formData, setFormData] = useState({
 		email: '',
@@ -25,6 +35,7 @@ const LoginScreen = () => {
 	});
 	const [errorMessage, setErrorMessage] = useState('');
 	const [showPassword, setShowPassword] = useState(false);
+	const inputRef = useRef<RNTextInput | null>(null);
 
 	useQuery({
 		queryKey: ['onboardingData'],
@@ -36,6 +47,19 @@ const LoginScreen = () => {
 		queryFn: getUserProfile,
 		enabled: !!user,
 	});
+
+	useEffect(() => {
+		const keyboardDidHideListener = Keyboard.addListener(
+			'keyboardDidHide',
+			() => {
+				setIsInputFocused(false);
+				inputRef.current?.blur();
+			}
+		);
+		return () => {
+			keyboardDidHideListener?.remove();
+		};
+	}, []);
 
 	const {mutate: loginMutation, isPending} = useMutation({
 		mutationFn: login,
@@ -68,67 +92,75 @@ const LoginScreen = () => {
 	};
 
 	return (
-		<MainContainer className="p-[3%]">
-			<ScrollView>
-				<AuthHeader
-					title="Welcome back to building your future"
-					subTitle="Enter your journey — one step closer to who you're becoming."
-				/>
-				<View className="gap-y-5">
-					<TextInput
-						placeholder="Email"
-						placeholderTextColor={'grey'}
-						inputMode="email"
-						onChangeText={text => {
-							setFormData(prev => ({...prev, email: text}));
-							setErrorMessage('');
-						}}
-						value={formData.email}
+		<KeyboardAvoidingView
+			className="flex-1 bg-background"
+			behavior={isInputFocused ? 'padding' : 'height'}
+			keyboardVerticalOffset={Platform.OS === 'ios' ? 130 : 120}
+			style={{flex: 1}}
+		>
+			<MainContainer className="p-[3%]">
+				<ScrollView>
+					<AuthHeader
+						title="Welcome back to building your future"
+						subTitle="Enter your journey — one step closer to who you're becoming."
 					/>
-					<View className="relative">
+					<View className="gap-y-5">
 						<TextInput
-							placeholder="Password"
+							placeholder="Email"
 							placeholderTextColor={'grey'}
+							inputMode="email"
 							onChangeText={text => {
-								setFormData(prev => ({...prev, password: text}));
+								setFormData(prev => ({...prev, email: text}));
 								setErrorMessage('');
 							}}
-							value={formData.password}
-							secureTextEntry={!showPassword}
+							value={formData.email}
 						/>
-						<TouchableOpacity
-							className="absolute right-4 top-4 z-10 p-1"
-							onPress={() => setShowPassword(!showPassword)}
-						>
-							<Feather
-								name={showPassword ? 'eye-off' : 'eye'}
-								size={20}
-								color="#FFFFFF"
+						<View className="relative">
+							<TextInput
+								placeholder="Password"
+								placeholderTextColor={'grey'}
+								onChangeText={text => {
+									setFormData(prev => ({...prev, password: text}));
+									setErrorMessage('');
+								}}
+								value={formData.password}
+								secureTextEntry={!showPassword}
 							/>
-						</TouchableOpacity>
-					</View>
-					<View>
-						<Text className="text-red-500 font-sora-regular text-sm">
-							{errorMessage}
-						</Text>
-						<TouchableOpacity
-							onPress={() =>
-								router.push(`/auth/forgot?email=${formData.email}`)
-							}
-						>
-							<Text className="text-white font-sora-semibold text-right">
-								Forgot Password?
+							<TouchableOpacity
+								className="absolute right-4 top-4 z-10 p-1"
+								onPress={() => setShowPassword(!showPassword)}
+							>
+								<Feather
+									name={showPassword ? 'eye-off' : 'eye'}
+									size={20}
+									color="#FFFFFF"
+								/>
+							</TouchableOpacity>
+						</View>
+						<View>
+							<Text className="text-red-500 font-sora-regular text-sm">
+								{errorMessage}
 							</Text>
-						</TouchableOpacity>
+							<TouchableOpacity
+								onPress={() =>
+									router.push(`/auth/forgot?email=${formData.email}`)
+								}
+							>
+								<Text className="text-white font-sora-semibold text-right">
+									Forgot Password?
+								</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
-				</View>
-			</ScrollView>
-			<AuthFooter
-				handlePress={handleLogin}
-				loading={isPending}
-				disabled={isPending}
-			/>
-		</MainContainer>
+					<View className="h-[30vh]" />
+				</ScrollView>
+				<AuthFooter
+					handlePress={handleLogin}
+					loading={isPending}
+					disabled={isPending}
+				/>
+			</MainContainer>
+		</KeyboardAvoidingView>
 	);
 };
 

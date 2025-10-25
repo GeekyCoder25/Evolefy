@@ -364,7 +364,7 @@ const HistoryModal = ({
 				onBackPress={onClose}
 			/>
 			<FlatList
-				data={data?.data.slice(0, 0)}
+				data={data?.data}
 				keyExtractor={({id}) => `${id}`}
 				style={{marginBottom: insets.bottom}}
 				renderItem={({item: converse}) => (
