@@ -64,16 +64,14 @@ const DailyChallenge = () => {
 						<DailyChallengeIcon />
 						<ImageBackground
 							source={require('../../assets/images/challenge_category_bg.png')}
-							// className="flex-1 justify-center items-center px-4 py-2"
 							style={{
-								// flex: 1,
 								justifyContent: 'center',
 								alignItems: 'center',
 								paddingHorizontal: 16,
 							}}
 							contentFit="contain"
 						>
-							<Text className="text-white text-lg font-sora-semibold text-center capitalize">
+							<Text className="text-white text-base font-sora-semibold text-center capitalize">
 								{dailyChallenge?.data.attributes.category}
 							</Text>
 						</ImageBackground>

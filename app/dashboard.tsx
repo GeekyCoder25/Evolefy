@@ -104,7 +104,7 @@ const Dashboard = () => {
 
 										<View className="mt-2 flex-row justify-between items-center">
 											<Text className="text-white text-4xl font-inter-semibold">
-												{completedSteps}
+												{completedSteps?.toLocaleString()}
 											</Text>
 
 											<DartIcon />
@@ -126,7 +126,7 @@ const Dashboard = () => {
 
 										<View className="mt-2 flex-row justify-between items-center">
 											<Text className="text-white text-4xl font-inter-semibold">
-												{pendingTasks?.length}
+												{pendingTasks?.length?.toLocaleString()}
 											</Text>
 
 											<DartIcon />
@@ -172,7 +172,7 @@ const Dashboard = () => {
 
 										<View className="mt-2 flex-row justify-between items-center">
 											<Text className="text-white text-4xl font-inter-semibold">
-												{user?.streak_count}
+												{user?.streak_count?.toLocaleString()}
 											</Text>
 
 											<FireIcon />
@@ -196,7 +196,7 @@ const Dashboard = () => {
 
 										<View className="mt-2 flex-row justify-between items-center">
 											<Text className="text-white text-4xl font-inter-semibold">
-												{user?.ev_score}
+												{user?.ev_score?.toLocaleString()}
 											</Text>
 											<Image
 												source={require('../assets/images/evoIcon.png')}
@@ -220,7 +220,7 @@ const Dashboard = () => {
 
 										<View className="mt-2 flex-row justify-between items-center">
 											<Text className="text-white text-4xl font-inter-semibold">
-												{leaderboardPosition}
+												{leaderboardPosition?.toLocaleString()}
 											</Text>
 
 											<CupIcon />

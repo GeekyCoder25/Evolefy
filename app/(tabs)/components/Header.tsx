@@ -134,13 +134,13 @@ const Header = ({
 						<View className="flex-row gap-x-3 ml-auto">
 							<View className="bg-secondary px-4 py-2 rounded-full flex-row items-center gap-2">
 								<Text className="text-white font-inter-bold text-xs">
-									{user?.ev_score} EV
+									{user?.ev_score.toLocaleString()} EV
 								</Text>
 								<EVIcon />
 							</View>
 							<View className="bg-secondary px-4 py-2 rounded-full flex-row items-center gap-2">
 								<Text className="text-white font-inter-bold text-xs">
-									{user?.streak_count} day
+									{user?.streak_count?.toLocaleString()} day
 									{user?.streak_count === 1 ? '' : 's'} streak
 								</Text>
 								<FireIcon />
