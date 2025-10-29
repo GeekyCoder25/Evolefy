@@ -6,6 +6,7 @@ import {router, useLocalSearchParams} from 'expo-router';
 import React, {useEffect, useRef, useState} from 'react';
 import {
 	ActivityIndicator,
+	Dimensions,
 	Keyboard,
 	NativeSyntheticEvent,
 	Pressable,
@@ -156,7 +157,11 @@ const VerifyOTPScreen = () => {
 									ref={ref => {
 										inputRefs.current[index] = ref;
 									}}
-									className="w-20 h-20 text-center text-3xl font-sora-semibold border-0 border-white py-5 px-5 rounded-xl bg-[#192024] text-white"
+									className={`${
+										Dimensions.get('window').width < 300
+											? 'w-10 h-10 text-3xl'
+											: 'w-20 h-20 text-5xl'
+									} text-center font-sora-semibold border-0 border-white py-5 px-5 rounded-xl bg-[#192024] text-white`}
 									maxLength={1}
 									inputMode="numeric"
 									value={digit}

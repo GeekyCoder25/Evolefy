@@ -1,4 +1,5 @@
-import ConnectIcon, {ConnectActiveIcon} from '@/assets/icons/connect';
+import ConnectIcon from '@/assets/icons/connect';
+import GoalIcon, {GoalActiveIcon} from '@/assets/icons/goal';
 import HomeIcon, {HomeActiveIcon} from '@/assets/icons/home';
 import JourneyIcon, {JourneyActiveIcon} from '@/assets/icons/journey';
 import MoreIcon from '@/assets/icons/more';
@@ -33,8 +34,8 @@ const tabs: TabConfig[] = [
 		icon: <JourneyIcon />,
 	},
 	{
-		name: 'connect',
-		title: 'My connect',
+		name: 'goals',
+		title: 'My goals',
 		icon: <ConnectIcon />,
 	},
 	{
@@ -59,7 +60,8 @@ const AiIcon: React.FC = () => (
 			{storage.getItem(HAS_OPENED_EVO).then(
 				res =>
 					!res && (
-						<View
+						<TouchableOpacity
+							onPress={() => router.push('/evo')}
 							className="rounded-full flex-row justify-center items-center gap-x-2 px-5 pb-1"
 							style={{backgroundColor: 'rgba(232, 213, 249, 1)'}}
 						>
@@ -70,7 +72,7 @@ const AiIcon: React.FC = () => (
 							<Text className="font-inter-bold mt-1">
 								Hi, I’m Evo, Click here let’s chat
 							</Text>
-						</View>
+						</TouchableOpacity>
 					)
 			)}
 		</View>
@@ -119,8 +121,8 @@ function CustomTabBar({state, descriptors, navigation}: BottomTabBarProps) {
 							return isFocused ? <HomeActiveIcon /> : <HomeIcon />;
 						case 'journey':
 							return isFocused ? <JourneyActiveIcon /> : <JourneyIcon />;
-						case 'connect':
-							return isFocused ? <ConnectActiveIcon /> : <ConnectIcon />;
+						case 'goals':
+							return isFocused ? <GoalActiveIcon /> : <GoalIcon />;
 						case 'more':
 							return isFocused ? <ProfileActiveIcon /> : <ProfileIcon />;
 						default:

@@ -174,7 +174,9 @@ const Header = ({
 								>
 									{activities.map((activity, index) => (
 										<View key={activity.id} className="mb-2">
-											<Text className="text-white font-inter-regular text-sm leading-5">
+											<Text
+												className={`${activity.completed ? 'text-[rgba(255,255,255,0.5)]' : 'text-white'} font-sora-semibold text-sm leading-5`}
+											>
 												{activity.title}
 											</Text>
 										</View>

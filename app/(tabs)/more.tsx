@@ -6,7 +6,6 @@ import {
 	updateUserProfile,
 	uploadProfilePhoto,
 } from '@/services/apis/user';
-import {MaterialCommunityIcons} from '@expo/vector-icons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import {useMutation} from '@tanstack/react-query';
@@ -197,13 +196,13 @@ const More = () => {
 
 			<ScrollView showsVerticalScrollIndicator={false}>
 				<View className="flex-row ml-auto justify-end py-5 px-5 gap-3">
-					<TouchableOpacity onPress={() => router.push('/dashboard')}>
+					{/* <TouchableOpacity onPress={() => router.push('/dashboard')}>
 						<MaterialCommunityIcons
 							name="view-dashboard"
 							size={30}
 							color="white"
 						/>
-					</TouchableOpacity>
+					</TouchableOpacity> */}
 					<TouchableOpacity onPress={() => router.push('/settings')}>
 						<FontAwesome6 name="gear" size={30} color="white" />
 					</TouchableOpacity>

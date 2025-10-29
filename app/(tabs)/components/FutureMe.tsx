@@ -1,4 +1,3 @@
-import CrownIcon from '@/assets/icons/crown';
 import LetterIcon from '@/assets/icons/letter';
 import {SCREEN_HEIGHT} from '@/constants';
 import {getFutureSelf} from '@/services/apis/user';
@@ -32,12 +31,7 @@ const FutureMe = () => {
 			>
 				<LetterIcon />
 			</TouchableOpacity>
-			<TouchableOpacity
-				onPress={() => router.push('/subscription/subscription')}
-				className="bg-white w-20 h-20 rounded-full flex justify-center items-center"
-			>
-				<CrownIcon />
-			</TouchableOpacity>
+
 			{!isPending && (
 				<TouchableOpacity
 					onPress={() =>

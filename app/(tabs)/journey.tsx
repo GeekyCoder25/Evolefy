@@ -1,327 +1,410 @@
-// Types for API responses
-import RadioIcon from '@/assets/icons/radio';
-import RadioActiveIcon from '@/assets/icons/radio-active';
 import {SCREEN_HEIGHT, SCREEN_WIDTH} from '@/constants';
-import {Colors} from '@/constants/Colors';
-import {completeGoal, getTodayGoal, getWeeklyGoals} from '@/services/apis/goal';
-import {FontAwesome6} from '@expo/vector-icons';
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {isAxiosError} from 'axios';
-import {Image, ImageBackground} from 'expo-image';
-import {LinearGradient} from 'expo-linear-gradient';
-import {router} from 'expo-router';
-import React, {useState} from 'react';
+import {useGlobalStore} from '@/context/store';
+import {getRoadMap, RoadmapStepsResponse} from '@/services/apis/roadmap';
+import {getUserProfile} from '@/services/apis/user';
+import {useQuery} from '@tanstack/react-query';
+import {Image} from 'expo-image';
+import React, {useEffect, useRef} from 'react';
 import {
-	ActivityIndicator,
-	RefreshControl,
+	Animated,
+	Dimensions,
+	Easing,
 	ScrollView,
 	StyleSheet,
 	Text,
-	TouchableOpacity,
 	View,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
-import WeekStrip from '../auth/components/WeekStrip';
+import Svg, {Circle, Defs, LinearGradient, Path, Stop} from 'react-native-svg';
+import FutureMe from './components/FutureMe';
 import Header from './components/Header';
 
-const Journey = () => {
+const {width: screenWidth} = Dimensions.get('window');
+
+const ProgressPath = () => {
+	const {setUser} = useGlobalStore();
 	const insets = useSafeAreaInsets();
-	const [selectedTab, setSelectedTab] = useState('Today schedule');
-	const [selectedDate, setSelectedDate] = useState(new Date());
-	const [refreshing, setRefreshing] = useState(false);
-	const queryClient = useQueryClient();
-	// const [selectedTask, setSelectedTask] = useState(null);
 
-	const {data: todayTasks} = useQuery({
-		queryKey: ['today_goals'],
-		queryFn: getTodayGoal,
+	const pulseAnim = useRef(new Animated.Value(1)).current;
+	// Start pulsing animation
+	useEffect(() => {
+		const startPulsing = () => {
+			Animated.loop(
+				Animated.sequence([
+					Animated.timing(pulseAnim, {
+						toValue: 1.1,
+						duration: 2000,
+						easing: Easing.inOut(Easing.ease),
+						useNativeDriver: true,
+					}),
+					Animated.timing(pulseAnim, {
+						toValue: 1,
+						duration: 2000,
+						easing: Easing.inOut(Easing.ease),
+						useNativeDriver: true,
+					}),
+				])
+			).start();
+		};
+
+		startPulsing();
+	}, [pulseAnim]);
+
+	const {data} = useQuery({
+		queryKey: ['user'],
+		queryFn: getUserProfile,
 	});
-	const {data: weeklyTasks} = useQuery({
-		queryKey: ['weekly_goals'],
-		queryFn: getWeeklyGoals,
+
+	useEffect(() => {
+		if (data) {
+			setUser({...data.data.attributes, id: data.data.id});
+		}
+	}, [data, setUser]);
+
+	const {data: roadmap} = useQuery({
+		queryKey: ['roadmap'],
+		queryFn: getRoadMap,
+		gcTime: Infinity,
 	});
 
-	const tasks: Task[] =
-		selectedTab === 'Today schedule'
-			? todayTasks?.data.map(g => ({
-					id: g.id,
-					time: g.attributes.due_date,
-					type: g.attributes.status,
-					category: g.attributes.priority,
-					title: g.attributes.task,
-					completed: g.attributes.status === 'completed',
-				})) || []
-			: selectedTab === 'Weekly goal'
-				? weeklyTasks?.data.map(g => ({
-						id: g.id,
-						time: g.attributes.target_completion_date,
-						type: g.attributes.status,
-						category: g.attributes.priority,
-						title: g.attributes.title,
-						completed: g.attributes.status === 'completed',
-					})) || []
-				: [];
+	const verticalSpacing = 180; // Space between each level
+	const stepsPerLevel = 1; // How many steps per level (adjust as needed)
 
-	const stats = {
-		todayGoals: todayTasks?.data.length || 0,
-		todayCompleted: 0,
-		totalGoals: weeklyTasks?.data.length || 0,
+	const generateLevelsFromRoadmap = (
+		roadmapData: RoadmapStepsResponse | undefined
+	) => {
+		if (!roadmapData?.data) return [];
+
+		const steps = roadmapData.data;
+		const levels = [];
+
+		// Calculate completed steps
+		const completedSteps = steps.filter(
+			step => step.status === 'completed'
+		).length;
+		const inProgressSteps = steps.filter(
+			step => step.status === 'in_progress'
+		).length;
+
+		// Calculate level progression
+		const completedLevels = Math.floor(completedSteps / stepsPerLevel);
+		const currentLevel = completedLevels + (inProgressSteps > 0 ? 1 : 0);
+		const totalLevels = Math.ceil(steps.length / stepsPerLevel);
+
+		for (let i = totalLevels; i >= 1; i--) {
+			// Get steps for this level
+			const levelSteps = steps.slice(
+				(i - 1) * stepsPerLevel,
+				i * stepsPerLevel
+			);
+			const levelCompletedSteps = levelSteps.filter(
+				step => step.status === 'completed'
+			).length;
+			// const levelInProgressSteps = levelSteps.filter(
+			// 	step => step.status === 'in_progress'
+			// ).length;
+
+			levels.push({
+				id: i,
+				goalId: steps[i - 1].id,
+				completed: i < currentLevel, // Fully completed levels
+				current: i === currentLevel, // Current level being worked on
+				locked: i > currentLevel, // Future levels
+				y: (totalLevels - i + 1) * verticalSpacing, // Vertical positioning
+				steps: levelSteps, // Associated roadmap steps
+				completedStepsCount: levelCompletedSteps,
+				totalStepsCount: levelSteps.length,
+				// Calculate progress percentage for current level
+				progress:
+					i === currentLevel
+						? Math.round((levelCompletedSteps / levelSteps.length) * 100)
+						: i < currentLevel
+							? 100
+							: 0,
+			});
+		}
+
+		return levels;
 	};
 
-	const handleRefresh = async () => {
-		setRefreshing(true);
-		await queryClient.invalidateQueries({queryKey: ['today_goals']});
-		await queryClient.invalidateQueries({queryKey: ['weekly_goals']});
-		await queryClient.invalidateQueries({queryKey: ['roadmap']});
-		queryClient.invalidateQueries({queryKey: ['roadmap-stats']});
-		queryClient.invalidateQueries({queryKey: ['leaderboard']});
-		setRefreshing(false);
+	// Alternative: Use step numbers directly as levels
+	// const generateLevelsFromStepNumbers = (
+	// 	roadmapData: RoadmapStepsResponse | undefined
+	// ) => {
+	// 	if (!roadmapData?.data) return [];
+
+	// 	const steps = roadmapData.data;
+	// 	const levels = [];
+
+	// 	// Find current progress
+	// 	const completedSteps = steps.filter(step => step.status === 'completed');
+	// 	const inProgressStep = steps.find(step => step.status === 'in_progress');
+
+	// 	const maxCompletedLevel =
+	// 		completedSteps.length > 0
+	// 			? Math.max(...completedSteps.map(step => step.step_number))
+	// 			: 0;
+	// 	const currentLevel = inProgressStep?.step_number || maxCompletedLevel + 1;
+
+	// 	// Generate levels based on step numbers
+	// 	for (let i = steps.length; i >= 1; i--) {
+	// 		const step = steps.find(s => s.step_number === i);
+
+	// 		levels.push({
+	// 			id: i,
+	// 			completed: i <= maxCompletedLevel,
+	// 			current: i === currentLevel,
+	// 			locked: i > currentLevel,
+	// 			y: (steps.length - i + 1) * verticalSpacing,
+	// 			step: step, // Associated roadmap step
+	// 			progress:
+	// 				i === currentLevel && inProgressStep
+	// 					? 50
+	// 					: i <= maxCompletedLevel
+	// 						? 100
+	// 						: 0,
+	// 		});
+	// 	}
+
+	// 	return levels;
+	// };
+
+	// Usage
+	const levels = generateLevelsFromRoadmap(roadmap);
+
+	// Or if you want to use step numbers as levels directly:
+	// const levels = generateLevelsFromStepNumbers(roadmap);
+
+	// You can also add current level progress from external state
+	const currentLevelProgress = 0; // From your component state or props
+	// const levelsWithProgress = levels.map(level => ({
+	// 	...level,
+	// 	progress: level.current ? currentLevelProgress : level.progress,
+	// }));
+
+	// Calculate x positions to create the winding path
+	const getXPosition = (index: number) => {
+		const centerX = screenWidth / 2.3;
+		const amplitude = screenWidth * 0.3; // How far left/right the path goes
+		const frequency = 0.9; // How often it switches sides
+
+		return centerX + Math.sin(index * frequency) * amplitude;
+	};
+
+	// Create the curved path between points
+
+	const totalHeight = levels.length * verticalSpacing + 200;
+
+	const createPathSegments = () => {
+		if (levels.length < 2) return [];
+
+		const segments = [];
+
+		for (let i = 0; i < levels.length - 1; i++) {
+			const currentLevel = levels[i];
+			const nextLevel = levels[i + 1];
+
+			const currentX = getXPosition(i);
+			const currentY = currentLevel.y;
+			const nextX = getXPosition(i + 1);
+			const nextY = nextLevel.y;
+
+			// Control points for smooth curve
+			const cp1x = currentX;
+			const cp1y = currentY + (nextY - currentY) * 0.5;
+			const cp2x = nextX;
+			const cp2y = nextY - (nextY - currentY) * 0.5;
+
+			const pathData = `M ${currentX} ${currentY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${nextX} ${nextY}`;
+
+			// Path uses gradient if the CURRENT level is completed
+			let color;
+			if (currentLevel.completed || currentLevel.current) {
+				color = 'url(#activeGradient)';
+			} else if (nextLevel.current) {
+				// For current level, show progress gradient
+				color = 'url(#progressGradient)';
+			} else {
+				color = '#919191';
+			}
+
+			segments.push({
+				path: pathData,
+				color: color,
+			});
+		}
+
+		return segments;
 	};
 
 	return (
-		<View className="flex-1 bg-background">
+		<View
+			className="flex-1 bg-background"
+			style={{marginBottom: insets.bottom + 10}}
+		>
 			<Image
 				source={require('../../assets/images/onboarding_bg.jpg')}
 				style={styles.bgImage}
 			/>
-			<Header showProgress title="Schedule" />
+			<Header title="My journey" />
+			<ScrollView
+				showsVerticalScrollIndicator={false}
+				contentContainerStyle={{minHeight: totalHeight}}
+				ref={scrollViewRef => {
+					if (scrollViewRef) {
+						setTimeout(() => {
+							// Find current level or last completed
+							const targetLevel =
+								levels.find(level => level.current) ||
+								levels.filter(level => level.completed).pop() ||
+								levels[0];
+							if (!targetLevel) return;
+							// Scroll to center this level on screen
+							const scrollToY =
+								targetLevel.y - Dimensions.get('window').height / 3;
 
-			<View className="px-[5%] py-5 ">
-				{/* Stats Cards */}
-				<View className="flex-row gap-3">
-					<View className="flex-1">
+							scrollViewRef.scrollTo({
+								y: Math.max(0, scrollToY),
+								animated: false,
+							});
+						}, 100);
+					}
+				}}
+			>
+				{/* The connecting path */}
+				<Svg width={screenWidth} height={totalHeight} className="absolute">
+					<Defs>
 						<LinearGradient
-							colors={['#00CCFF', '#1520A6']}
-							start={{x: 0, y: 0}}
-							end={{x: 1, y: 0.4}}
-							style={[styles.statsCardGradient, {flex: 1}]}
+							id="activeGradient"
+							x1="0%"
+							y1="0%"
+							x2="0%"
+							y2="100%"
 						>
-							<View className="p-4" style={[styles.statsCard, {flex: 1}]}>
-								<Text className="text-white font-sora-semibold text-sm mb-1">
-									Today goals
-								</Text>
-								<Text className="text-white text-2xl">{stats.todayGoals}</Text>
-							</View>
+							<Stop offset="0%" stopColor="#00CCFF" />
+							<Stop offset="100%" stopColor="#1520A6" />
 						</LinearGradient>
-					</View>
-					<View className="flex-1">
+
 						<LinearGradient
-							colors={['#00CCFF', '#1520A6']}
-							start={{x: 0, y: 0}}
-							end={{x: 1, y: 0.4}}
-							style={styles.statsCardGradient}
+							id="progressGradient"
+							x1="0%"
+							y1="100%"
+							x2="0%"
+							y2="0%"
 						>
-							<View className=" p-4" style={styles.statsCard}>
-								<Text className="text-white font-inter-semibold text-sm mb-1">
-									Today Completed Goals
-								</Text>
-								<Text className="text-white font-inter-bold text-2xl">
-									{stats.todayCompleted}
-								</Text>
-							</View>
+							<Stop offset="0%" stopColor="#1520A6" />
+							<Stop offset={`${currentLevelProgress}%`} stopColor="#00CCFF" />
+							<Stop offset={`${currentLevelProgress}%`} stopColor="#919191" />
+							<Stop offset="100%" stopColor="#919191" />
 						</LinearGradient>
-					</View>
-					<View className="flex-1">
-						<LinearGradient
-							colors={['#00CCFF', '#1520A6']}
-							start={{x: 0, y: 0}}
-							end={{x: 1, y: 0.4}}
-							style={[styles.statsCardGradient, {flex: 1}]}
+					</Defs>
+					{createPathSegments().map((segment, index) => (
+						<Path
+							key={index}
+							d={segment.path}
+							stroke={segment.color}
+							strokeWidth="50"
+							fill="none"
+							strokeLinecap="round"
+						/>
+					))}
+				</Svg>
+
+				{/* Level nodes */}
+				{levels.map((level, index) => {
+					const x = getXPosition(index);
+
+					return (
+						<View
+							key={level.id}
+							className="absolute"
+							style={{
+								left: x - 40,
+								top: level.y - 40,
+							}}
+							// disabled={level.locked}
+							// onPress={() =>
+							// 	router.push(`/goal/view?roadmapId=${level.goalId}`)
+							// }
 						>
-							<View className="p-4" style={[styles.statsCard, {flex: 1}]}>
-								<Text className="text-white font-inter-regular text-sm mb-1">
-									Total Weekly Goals
-								</Text>
-								<Text className="text-white font-inter-bold text-2xl">
-									{stats.totalGoals}
-								</Text>
-							</View>
-						</LinearGradient>
-					</View>
-				</View>
-
-				{/* Calendar */}
-
-				<WeekStrip
-					selectedDate={selectedDate}
-					setSelectedDate={setSelectedDate}
-				/>
-			</View>
-
-			{/* Tabs and Content */}
-			<View className="flex-1 px-[5%]">
-				{/* Tab Selector */}
-				<View className="flex-row bg-gray-900/30 rounded-xl p-1 mb-5">
-					{['Today schedule', 'Weekly goal', 'Monthly goal'].map(tab => (
-						<TouchableOpacity
-							key={tab}
-							onPress={() => setSelectedTab(tab)}
-							className={`flex-1 py-3 rounded-lg mx-5`}
-						>
-							<Text
-								className={`font-inter-medium text-sm ${
-									selectedTab === tab ? 'text-white' : 'text-gray-400'
-								}`}
-							>
-								{tab}
-							</Text>
-							{selectedTab === tab && (
-								<LinearGradient
-									colors={['#00CCFF', '#1520A6']}
-									start={{x: 0, y: 0}}
-									end={{x: 1, y: 0.4}}
+							{level.completed && (
+								<Animated.View
+									className="absolute w-24 h-24 rounded-full border-4 "
 									style={{
-										height: 5,
-										marginTop: 5,
-										width: '60%',
-										borderRadius: 10,
+										width: 75,
+										height: 75,
+										left: -2,
+										top: -2,
+										opacity: 0.8,
+										borderColor: '#008B58',
+										transform: [{scale: pulseAnim}],
 									}}
 								/>
 							)}
-						</TouchableOpacity>
-					))}
-				</View>
+							<View
+								className="w-20 h-20 rounded-full items-center justify-center"
+								style={{
+									backgroundColor: level.completed
+										? '#008B58'
+										: level.current
+											? '#80E7C1'
+											: '#919191',
+									filter: 'contrast(1.1) brightness(0.95)',
+								}}
+							>
+								{/* Overlay div for noise texture */}
+								<View
+									className="absolute inset-0 w-20 h-20 rounded-full"
+									style={{
+										backgroundColor: 'transparent',
+										backgroundImage: `
+                                                    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                                                    radial-gradient(circle at 75% 75%, rgba(0,0,0,0.1) 0%, transparent 50%),
+                                                    radial-gradient(circle at 75% 25%, rgba(255,255,255,0.05) 0%, transparent 50%),
+                                                    radial-gradient(circle at 25% 75%, rgba(0,0,0,0.05) 0%, transparent 50%)
+                                                `,
+										backgroundSize: '4px 4px, 6px 6px, 3px 3px, 5px 5px',
+										opacity: 0.6,
+									}}
+								/>
+								<Text
+									className="text-white font-sora-bold"
+									style={{fontSize: 48}}
+								>
+									{level.id}
+								</Text>
+							</View>
 
-				{/* Tasks List */}
-				<ScrollView
-					showsVerticalScrollIndicator={false}
-					className="flex-1"
-					contentContainerStyle={{paddingBottom: 100 + insets.bottom}}
-					refreshControl={
-						<RefreshControl
-							onRefresh={handleRefresh}
-							refreshing={refreshing}
-							colors={[Colors.secondary]}
-						/>
-					}
-				>
-					{tasks.map(task => (
-						<RenderTask key={task.id} task={task} />
-					))}
-				</ScrollView>
-
-				{/* Floating Action Button */}
-				<TouchableOpacity
-					className="w-16 h-16 bg-white rounded-full items-center justify-center ml-auto"
-					style={{
-						shadowColor: '#000',
-						shadowOffset: {width: 0, height: 4},
-						shadowOpacity: 0.3,
-						shadowRadius: 8,
-						elevation: 8,
-						bottom: insets.bottom + 100,
-					}}
-					onPress={() => router.push('/goal/create')}
-				>
-					<FontAwesome6 name="plus" size={40} color="#00CCFF" />
-				</TouchableOpacity>
-			</View>
+							{/* Circular progress for current level */}
+							{level.current && (
+								<View className="absolute z-10">
+									<Svg width="150" height="150">
+										{/* Progress circle */}
+										<Circle
+											cx="60"
+											cy="35"
+											r="35"
+											stroke="#007E4F"
+											strokeWidth="5"
+											fill="none"
+											strokeDasharray={`${2 * Math.PI * 42}`}
+											strokeDashoffset={`${2 * Math.PI * 42 * (1 - level.progress / 100)}`}
+											strokeLinecap="round"
+											transform="rotate(-90 48 48)"
+										/>
+									</Svg>
+								</View>
+							)}
+						</View>
+					);
+				})}
+			</ScrollView>
+			<FutureMe />
 		</View>
 	);
 };
 
-export default Journey;
-
-const RenderTask = ({task}: {task: Task}) => {
-	const queryClient = useQueryClient();
-
-	const {mutate: completeTaskMutate, isPending: isCompleting} = useMutation({
-		mutationFn: completeGoal,
-		onSuccess: () => {
-			queryClient.invalidateQueries({queryKey: ['today_goals']});
-			queryClient.invalidateQueries({queryKey: ['weekly_goals']});
-			queryClient.invalidateQueries({queryKey: ['goal', task.id]});
-			queryClient.invalidateQueries({queryKey: ['roadmap']});
-			queryClient.invalidateQueries({queryKey: ['roadmap-stats']});
-			queryClient.invalidateQueries({queryKey: ['leaderboard']});
-			Toast.show({
-				type: 'success',
-				text1: 'Success',
-				text2: 'Goal completed successfully.',
-			});
-		},
-		onError: error => {
-			Toast.show({
-				type: 'error',
-				text1: 'Error',
-				text2: isAxiosError(error)
-					? error.response?.data?.message
-					: 'Failed to complete the task. Please try again.',
-			});
-		},
-	});
-
-	const getCategoryColor = (category: string) => {
-		switch (category) {
-			case 'urgent':
-				return '#EF4444';
-			case 'high':
-				return '#8B5CF6';
-			case 'medium':
-				return '#3B82F6';
-			case 'low':
-				return '#10B981';
-			default:
-				return '#6B7280';
-		}
-	};
-
-	return (
-		<TouchableOpacity
-			key={task.id}
-			className="bg-[#2E0E4B] rounded-2xl mb-3 overflow-hidden"
-			onPress={() => router.push(`/goal/view?id=${task.id}`)}
-		>
-			<ImageBackground
-				source={require('../../assets/images/noise-bg-purple.png')}
-			>
-				<View className="flex-row items-center justify-between p-4 rounded-2xl">
-					<View className="flex-1">
-						<View className="flex-row items-center gap-3 mb-2">
-							<Text className="text-white font-inter-medium text-sm">
-								{task.time}
-							</Text>
-							<View
-								className="px-2 py-1 rounded"
-								style={{
-									backgroundColor: getCategoryColor(task.category) + '20',
-								}}
-							>
-								<Text
-									className="font-inter-medium text-xs"
-									style={{color: getCategoryColor(task.category)}}
-								>
-									{task.type}
-								</Text>
-							</View>
-							<Text
-								className="font-inter-medium text-xs"
-								style={{color: getCategoryColor(task.category)}}
-							>
-								{task.category}
-							</Text>
-						</View>
-						<Text className="text-white font-inter-medium text-base">
-							{task.title}
-						</Text>
-					</View>
-					<View className="ml-4">
-						{isCompleting ? (
-							<ActivityIndicator size="small" color="#E8D5F9" />
-						) : task.completed ? (
-							<RadioActiveIcon />
-						) : (
-							<TouchableOpacity onPress={() => completeTaskMutate(task.id)}>
-								<RadioIcon />
-							</TouchableOpacity>
-						)}
-					</View>
-				</View>
-			</ImageBackground>
-		</TouchableOpacity>
-	);
-};
+export default ProgressPath;
 
 const styles = StyleSheet.create({
 	container: {
@@ -344,22 +427,4 @@ const styles = StyleSheet.create({
 		flex: 1,
 		position: 'absolute',
 	},
-	statsCardGradient: {
-		borderRadius: 20,
-		overflow: 'hidden',
-		padding: 0.5,
-	},
-	statsCard: {
-		backgroundColor: '#2D2D2D',
-		borderRadius: 20,
-	},
 });
-
-interface Task {
-	id: number;
-	time: string;
-	type: 'pending' | 'in_progress' | 'completed';
-	category: 'high' | 'medium' | 'low';
-	title: string;
-	completed: boolean;
-}

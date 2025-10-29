@@ -25,7 +25,7 @@ import {
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-import Header from './components/Header';
+import Header from './(tabs)/components/Header';
 
 const categoryColors: Record<string, string> = {};
 
@@ -234,7 +234,7 @@ const Connect = () => {
 	return (
 		<View className="flex-1 bg-background">
 			<Image
-				source={require('../../assets/images/onboarding_bg.jpg')}
+				source={require('../assets/images/onboarding_bg.jpg')}
 				style={styles.bgImage}
 			/>
 			<Header showProfile />
